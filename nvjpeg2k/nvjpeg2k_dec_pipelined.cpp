@@ -182,20 +182,17 @@ int decode_images(FileNames &current_names, std::vector<nvjpeg2ksample_img> &out
     CHECK_CUDA(cudaEventSynchronize(stopEvent));
     CHECK_CUDA(cudaEventElapsedTime(&loopTime, startEvent, stopEvent));
     time += static_cast<double>(loopTime/1000.0); // loopTime is in milliseconds
-    
-    if (params.write_decoded)
+  
+    for( int i = 0; i < params.batch_size; i++)
     {
-        for( int i = 0; i < params.batch_size; i++)
-        {
-            nvjpeg2kImageInfo_t image_info;
-            nvjpeg2kImageComponentInfo_t comp_info;
-            CHECK_NVJPEG2K(nvjpeg2kStreamGetImageInfo(params.jpeg2k_streams[i], &image_info));
-             // assume all components have the same precision
-            CHECK_NVJPEG2K(nvjpeg2kStreamGetImageComponentInfo(params.jpeg2k_streams[i], &comp_info, 0));
+        nvjpeg2kImageInfo_t image_info;
+        nvjpeg2kImageComponentInfo_t comp_info;
+        CHECK_NVJPEG2K(nvjpeg2kStreamGetImageInfo(params.jpeg2k_streams[i], &image_info));
+         // assume all components have the same precision
+        CHECK_NVJPEG2K(nvjpeg2kStreamGetImageComponentInfo(params.jpeg2k_streams[i], &comp_info, 0));
 
-            write_image(params.output_dir, current_names[i], nvjpeg2k_output[i], image_info.image_width, 
-                image_info.image_height, image_info.num_components, comp_info.precision, params.verbose);
-        }
+        write_image(params.output_dir, current_names[i], nvjpeg2k_output[i], image_info.image_width, 
+            image_info.image_height, image_info.num_components, comp_info.precision, params.verbose);
     }
     
     CHECK_NVJPEG2K(nvjpeg2kDecodeParamsDestroy(decode_params));
@@ -334,12 +331,6 @@ int main(int argc, const char *argv[])
         params.warmup = std::atoi(argv[pidx + 1]);
     }
 
-    params.write_decoded = false;
-    if ((pidx = findParamIndex(argv, argc, "-o")) != -1)
-    {
-        params.output_dir = argv[pidx + 1];
-        params.write_decoded = true;
-    }
     params.verbose = false;
     if ((pidx = findParamIndex(argv, argc, "-v")) != -1)
     {
@@ -348,11 +339,6 @@ int main(int argc, const char *argv[])
 
     if( params.verbose)
     {
-        if(params.write_decoded) 
-        {
-            std::cerr << "3/4 channel images are written out as bmp files and 1 channels images are written out as .pgm files"
-                      << std::endl;
-        }
         cudaDeviceProp props;
         int dev = 0;
         cudaGetDevice(&dev);

@@ -250,6 +250,14 @@ int readInput(const std::string &sInputPath, std::vector<std::string> &filelist)
                 filelist.push_back(p.path().string());
            }
         }
+        std::sort(filelist.begin(), filelist.end());
+
+        /* Print sorted file list to stderr
+        for (auto f : filelist) {
+              std::cerr << f << std::endl;
+        }
+        */
+
     }
     else
     {
