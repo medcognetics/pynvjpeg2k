@@ -28,6 +28,7 @@
 
 #include "nvjpeg2k_dec_pipelined.h"
 
+
 int write_image(std::string output_path, std::string filename, const nvjpeg2kImage_t &imgdesc, int width, int height,
                uint32_t num_components, uint8_t precision, bool verbose)
 {
@@ -36,6 +37,7 @@ int write_image(std::string output_path, std::string filename, const nvjpeg2kIma
         return EXIT_FAILURE;
     }
 
+    int err = EXIT_SUCCESS;
     err = writeRaw<unsigned short>(
         (unsigned short *)imgdesc.pixel_data[0],
         imgdesc.pitch_in_bytes[0], 
@@ -45,88 +47,11 @@ int write_image(std::string output_path, std::string filename, const nvjpeg2kIma
     );
     if (err)
     {
-        std::cerr << "Cannot write output file: " << fname << std::endl;
+        std::cerr << "Cannot write output" << std::endl;
     }
-    return err
-
-/*
-int write_image(std::string output_path, std::string filename, const nvjpeg2kImage_t &imgdesc, int width, int height,
-               uint32_t num_components, uint8_t precision, bool verbose)
-{
-    // Get the file name, without extension.
-    // This will be used to rename the output file.
-    size_t position = filename.rfind(separator);
-    std::string sFileName =
-        (std::string::npos == position)
-            ? filename
-            : filename.substr(position + 1, filename.size());
-    position = sFileName.rfind(".");
-    sFileName = (std::string::npos == position) ? sFileName
-                                                : sFileName.substr(0, position);
-
-    int err = EXIT_SUCCESS;
-    
-    // For single component image output as PGM channel
-    if (num_components == 1)
-    {
-        std::string fname(output_path + separator + sFileName + ".pgm");
-        if (imgdesc.pixel_type == NVJPEG2K_UINT8)
-        {
-            err = writePGM<unsigned char>(fname.c_str(), (unsigned char *)imgdesc.pixel_data[0], 
-                imgdesc.pitch_in_bytes[0], width, height, precision);
-        }
-        else if (imgdesc.pixel_type == NVJPEG2K_UINT16)
-        {
-            //err = writePGM<unsigned short>(fname.c_str(), (unsigned short *)imgdesc.pixel_data[0],
-            //     imgdesc.pitch_in_bytes[0], width, height, precision);
-
-            err = writeRaw<unsigned short>((unsigned short *)imgdesc.pixel_data[0],
-                 imgdesc.pitch_in_bytes[0], width, height, precision);
-        }
-        
-        if (err)
-        {
-            std::cerr << "Cannot write output file: " << fname << std::endl;
-        }
-       
-    }
-    else if (num_components == 3 || num_components == 4)
-    {
-        if(num_components == 4 && verbose)
-        {
-            std::cerr<<"Discarding the alpha channel and writing the 4 component image as a .bmp file"<<std::endl;
-        }
-        std::string fname(output_path + separator + sFileName + ".bmp");
-        if (imgdesc.pixel_type == NVJPEG2K_UINT8)
-        {
-            err = writeBMP<unsigned char>(fname.c_str(),
-                     (unsigned char *)imgdesc.pixel_data[0], imgdesc.pitch_in_bytes[0],
-                     (unsigned char *)imgdesc.pixel_data[1], imgdesc.pitch_in_bytes[1],
-                     (unsigned char *)imgdesc.pixel_data[2], imgdesc.pitch_in_bytes[2],
-                     width, height, precision, verbose);
-        }
-        else if (imgdesc.pixel_type == NVJPEG2K_UINT16)
-        {
-            err = writeBMP<unsigned short>(fname.c_str(),
-                     (unsigned short *)imgdesc.pixel_data[0], imgdesc.pitch_in_bytes[0],
-                     (unsigned short *)imgdesc.pixel_data[1], imgdesc.pitch_in_bytes[1],
-                     (unsigned short *)imgdesc.pixel_data[2], imgdesc.pitch_in_bytes[2],
-                     width, height, precision, verbose);
-        }
-        if (err)
-        {
-            std::cerr << "Cannot write output file: " << fname << std::endl;
-        }
-    }
-    else
-    {
-        std::cerr << "only 1 and 3 channel outputs supported\n";
-        return EXIT_FAILURE;
-    }
-    
     return err;
 }
-*/
+
 
 int prepare_buffers(FileData &file_data, std::vector<size_t> &file_len,
                     std::vector<nvjpeg2ksample_img> &ibuf,

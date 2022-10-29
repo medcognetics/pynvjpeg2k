@@ -44,6 +44,11 @@ else
 	npm install
 endif
 
+build: 
+	mkdir -p nvjpeg2k/build
+	cd nvjpeg2k/build && cmake ..
+	cd nvjpeg2k/build && cmake --build .
+
 quality: $(VENV)/bin/activate-quality
 	$(MAKE) clean
 	$(PYTHON) -m black --check --line-length $(LINE_LEN) --target-version $(PY_VER_SHORT) $(QUALITY_DIRS)
