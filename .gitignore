@@ -139,3 +139,4 @@ coverage.xml
 **/version.py
 **/build
 !libnvjpeg/lib
+!libnvjpeg/lib/*.so
