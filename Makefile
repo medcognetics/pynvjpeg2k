@@ -1,10 +1,10 @@
 .PHONY: clean clean-env check quality style tag-version test env upload upload-test
 
-PROJECT=project
+PROJECT=pynvjpeg2k
 PY_VER=python3.10
 PY_VER_SHORT=py$(shell echo $(PY_VER) | sed 's/[^0-9]*//g')
-QUALITY_DIRS=$(PROJECT) tests setup.py
-CLEAN_DIRS=$(PROJECT) tests
+QUALITY_DIRS=tests setup.py
+CLEAN_DIRS=tests
 VENV=$(shell pwd)/env
 PYTHON=$(VENV)/bin/python
 
@@ -44,6 +44,11 @@ else
 	npm install
 endif
 
+build: 
+	mkdir -p nvjpeg2k/build
+	cd nvjpeg2k/build && cmake ..
+	cd nvjpeg2k/build && cmake --build .
+
 quality: $(VENV)/bin/activate-quality
 	$(MAKE) clean
 	$(PYTHON) -m black --check --line-length $(LINE_LEN) --target-version $(PY_VER_SHORT) $(QUALITY_DIRS)
@@ -58,8 +63,6 @@ style: $(VENV)/bin/activate-quality
 test: $(VENV)/bin/activate-test ## run unit tests
 	$(PYTHON) -m pytest \
 		-rs \
-		--cov=./$(PROJECT) \
-		--cov-report=xml \
 		./tests/
 
 test-%: $(VENV)/bin/activate-test ## run unit tests matching a pattern
@@ -70,8 +73,6 @@ test-pdb-%: $(VENV)/bin/activate-test ## run unit tests matching a pattern with 
 
 test-ci: $(VENV)/bin/activate $(VENV)/bin/activate-test ## runs CI-only tests
 	$(PYTHON) -m pytest \
-		--cov=./$(PROJECT) \
-		--cov-report=xml \
 		-s -v \
 		-m "not ci_skip" \
 		./tests/

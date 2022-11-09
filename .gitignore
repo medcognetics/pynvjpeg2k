@@ -137,3 +137,5 @@ coverage.xml
 
 *.orig.*
 **/version.py
+**/build
+!libnvjpeg/lib
