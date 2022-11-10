@@ -82,12 +82,24 @@ def test_decode_jpeg2k(jpeg2k_file):
             assert (decoded == actual[i]).all()
 
 
+@pytest.mark.parametrize("rows,cols", [
+    (128, 128),
+    pytest.param(32, 32, marks=pytest.mark.xfail(raises=RuntimeError)),
+    pytest.param(512, 512, marks=pytest.mark.xfail(raises=RuntimeError)),
+])
+def test_decode_jpeg2k_handle_baddims(jpeg2k_file, rows, cols):
+    with pydicom.dcmread(jpeg2k_file) as dcm:
+        nf = int(dcm.NumberOfFrames)
+        for i, frame in enumerate(generate_pixel_data_frame(dcm.PixelData, nf)):
+            pynv.decode_jpeg2k(frame, len(frame), rows, cols)
+
+
 def test_decode_frames_jpeg2k(jpeg2k_file):
     with pydicom.dcmread(jpeg2k_file) as dcm:
         nf = int(dcm.NumberOfFrames)
         actual = dcm.pixel_array
         t1 = time()
-        decoded = pynv.decode_frames_jpeg2k(dcm.PixelData, len(dcm.PixelData), dcm.Rows, dcm.Columns, 2)
+        decoded = pynv.decode_frames_jpeg2k(dcm.PixelData, len(dcm.PixelData), dcm.Rows, dcm.Columns, 1)
         t2 = time()
         delta = t2 - t1
         print(f"Delta: {delta}")
@@ -95,6 +107,25 @@ def test_decode_frames_jpeg2k(jpeg2k_file):
         assert decoded.shape == (nf, dcm.Rows, dcm.Columns)
         assert decoded.dtype == np.uint16
         assert (decoded == actual).all()
+
+
+@pytest.mark.parametrize("rows,cols", [
+    (128, 128),
+    pytest.param(32, 32, marks=pytest.mark.xfail(raises=RuntimeError)),
+    pytest.param(512, 512, marks=pytest.mark.xfail(raises=RuntimeError)),
+])
+def test_decode_frames_jpeg2k_handle_baddim(jpeg2k_file, rows, cols):
+    with pydicom.dcmread(jpeg2k_file) as dcm:
+        nf = int(dcm.NumberOfFrames)
+        pynv.decode_frames_jpeg2k(dcm.PixelData, len(dcm.PixelData), rows, cols, 1)
+
+
+def test_decode_jpeg2k_handle_corruption(jpeg2k_file):
+    with pydicom.dcmread(jpeg2k_file) as dcm:
+        nf = int(dcm.NumberOfFrames)
+        for i, frame in enumerate(generate_pixel_data_frame(dcm.PixelData, nf)):
+            with pytest.raises(RuntimeError):
+                pynv.decode_jpeg2k(frame, len(frame) // 2, dcm.Rows, dcm.Columns)
 
 
 def test_encode_decode():

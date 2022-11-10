@@ -60,6 +60,13 @@ bool hasBot(const char* buffer) {
 }
 
 
+bool readBot(const char* buffer) {
+  if (!hasBot(buffer)) {
+    throw std::invalid_argument("Buffer does not have a basic offset table");
+  }
+  uint32_t size = readLE32(buffer, 4);
+}
+
 std::vector<FrameInfo_t> getFrameInfo(const char* buffer, size_t size) {
   constexpr uint32_t LENGTH_PREAMBLE = 0xfffee000;
   constexpr uint32_t DELIM = 0xfffee0dd;
@@ -70,16 +77,28 @@ std::vector<FrameInfo_t> getFrameInfo(const char* buffer, size_t size) {
 
     // If a length is given, advance that far ahead
     if (tag == LENGTH_PREAMBLE) {
-      uint32_t length = read<uint32_t>(buffer, offset + 4);
-      FrameInfo_t frameInfo = {offset + 8, length};
+      uint32_t frameLength = read<uint32_t>(buffer, offset + sizeof(uint32_t));
+      size_t frameStart = offset + 2 * sizeof(uint32_t);
+
+      // If a length is given, advance that far ahead
+      if (frameStart + frameLength > size) {
+        std::string msg = (
+            "Frame at offset " + std::to_string(frameStart) + " with length " + std::to_string(frameLength) 
+            + " overruns buffer of size " + std::to_string(size)
+        );
+        throw std::runtime_error(msg);
+      }
+
+      FrameInfo_t frameInfo = {frameStart, frameLength};
+
       result.push_back(frameInfo);
-      offset += length + 8;
+      offset += frameLength + 2 * sizeof(uint32_t);
     }
     else if (tag == DELIM){
       break;
     }
     else {
-      throw std::invalid_argument("Unexpected tag");
+      throw std::invalid_argument("Unexpected tag" + std::string());
     }
   }
   return result;

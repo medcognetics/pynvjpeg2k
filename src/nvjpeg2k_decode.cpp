@@ -47,6 +47,19 @@ int _async_frame_decode(
 }
 
 
+void validateImage(nvjpeg2kImageInfo_t *imageInfo, const size_t rows, const size_t cols) {
+  if (imageInfo->image_width != cols) {
+    throw std::runtime_error("Expected image with " + std::to_string(rows) + " rows but found " + std::to_string(imageInfo->image_width));
+  }
+  if (imageInfo->image_height != rows) {
+    throw std::runtime_error("Expected image with " + std::to_string(rows) + " rows but found " + std::to_string(imageInfo->image_height));
+  }
+  if (imageInfo->num_components != 1) {
+    throw std::runtime_error("Only grayscale images are supported. Found " + std::to_string(imageInfo->num_components) + " components");
+  }
+}
+
+
 int _decode_frames(
     std::vector<const char*> frameBuffers,
     std::vector<size_t> bufferSizes,
@@ -90,6 +103,7 @@ int _decode_frames(
   unsigned char* devBuffer;
   size_t pitchInBytes;
   CHECK_CUDA(deviceMalloc<uint16_t>(&devBuffer, &pitchInBytes, batchSize * rows, cols));
+  const size_t devBufferSize = batchSize * rows * pitchInBytes * sizeof(uint16_t);
 
   // Loop over frames to be decoded
   int err = EXIT_SUCCESS;
@@ -104,14 +118,22 @@ int _decode_frames(
 
     // Seek devBuffer to the index of the frame we are decoding within the batch
     unsigned char* devBufferThisFrame = seekToFrameNumber<unsigned char>(devBuffer, pitchInBytes, rows, frameIndex % batchSize);
+    assert(devBufferThisFrame < devBuffer + devBufferSize);
 
     // Ensure the previous stage has finished
     if(frameIndex >= PIPELINE_STAGES) {
       CHECK_CUDA(cudaStreamSynchronize(params->cudaStream));
     }
+
+    // Parse the stream
+    CHECK_NVJPEG2K(nvjpeg2kStreamParse(*params->handle, buffer, size, 0, 0, params->jpegStream));
+
+    // Validate image to be decoded
+    nvjpeg2kImageInfo_t imageInfo;
+    CHECK_NVJPEG2K(nvjpeg2kStreamGetImageInfo(params->jpegStream, &imageInfo));
+    validateImage(&imageInfo, rows, cols);
     
     // Submit decode job
-    CHECK_NVJPEG2K(nvjpeg2kStreamParse(*params->handle, buffer, size, 0, 0, params->jpegStream));
     err = _async_frame_decode(buffer, size, params, devBufferThisFrame, pitchInBytes, &params->cudaStream);
     if (err) {
       std::cerr << "Error decoding frame at index " << frameIndex << std::endl;
@@ -121,6 +143,7 @@ int _decode_frames(
     // Copy decoded result back to host
     uint16_t* outBufferThisFrame = seekToFrameNumber<uint16_t>(outBuffer, cols, rows, frameIndex);
     CHECK_CUDA(deviceToHostCopy<uint16_t>(devBufferThisFrame, pitchInBytes, outBufferThisFrame, params->rows, params->cols, &params->cudaStream));
+    std::cout << "End loop" << std::endl;
   }
 
   // Free all resources
@@ -173,7 +196,9 @@ py::array_t<uint16_t> decode(
   );
 
   if (err) {
-    throw std::invalid_argument("error");
+    std::stringstream msg;
+    msg << "NVJPEG failure: '#" << err << "' " << nvjpegGetErrorString((nvjpeg2kStatus_t)err) << std::endl; \
+    throw std::runtime_error(msg.str());
   }
   return outBuffer;
 }
@@ -227,7 +252,9 @@ py::array_t<uint16_t> decode_frames(
   );
 
   if (err) {
-    throw std::invalid_argument("error");
+    std::stringstream msg;
+    msg << "NVJPEG failure: '#" << err << "' " << nvjpegGetErrorString((nvjpeg2kStatus_t)err) << " at " << __FILE__ << ":" << __LINE__ << std::endl; \
+    throw std::runtime_error(msg.str());
   }
   return outBuffer;
 }
