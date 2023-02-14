@@ -111,6 +111,7 @@ int _decode_frames(
     }
     
     // Submit decode job
+    std::cout << "PARSE" << std::endl;
     CHECK_NVJPEG2K(nvjpeg2kStreamParse(*params->handle, buffer, size, 0, 0, params->jpegStream));
     err = _async_frame_decode(buffer, size, params, devBufferThisFrame, pitchInBytes, &params->cudaStream);
     if (err) {
@@ -119,11 +120,14 @@ int _decode_frames(
     }
 
     // Copy decoded result back to host
+    std::cout << "COPY" << std::endl;
     uint16_t* outBufferThisFrame = seekToFrameNumber<uint16_t>(outBuffer, cols, rows, frameIndex);
     CHECK_CUDA(deviceToHostCopy<uint16_t>(devBufferThisFrame, pitchInBytes, outBufferThisFrame, params->rows, params->cols, &params->cudaStream));
+    std::cout << "DONE" << std::endl;
   }
 
   // Free all resources
+  std::cout << "FREE" << std::endl;
   CHECK_CUDA(cudaDeviceSynchronize());
   CHECK_CUDA(cudaFree(devBuffer));
   CHECK_NVJPEG2K(nvjpeg2kDestroy(handle));
@@ -131,6 +135,9 @@ int _decode_frames(
     CHECK_NVJPEG2K(nvjpeg2kStreamDestroy(stageParams[p].jpegStream));
     CHECK_NVJPEG2K(nvjpeg2kDecodeStateDestroy(stageParams[p].decodeState));
     CHECK_CUDA(cudaStreamDestroy(stageParams[p].cudaStream));
+  }
+  if (err) {
+    std::cout << "Error code: " << err << std::endl;
   }
   return err;
 }
@@ -199,6 +206,8 @@ py::array_t<uint16_t> decode_frames(
     const size_t cols,
     const int batchSize
 ) {
+  std::cout << "FOO";
+
   // Scan PixelData buffer and to find frame offsets and sizes
   std::vector<dicom::FrameInfo_t> frameInfo = dicom::getFrameInfo(buffer, size);
   std::vector<const char*> frameBuffers;

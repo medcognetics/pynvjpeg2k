@@ -5,6 +5,7 @@ from time import time
 
 import numpy as np
 import pydicom
+from pydicom.data import get_testdata_file
 import pytest
 from pydicom.encaps import encapsulate, generate_pixel_data_frame, get_nr_fragments
 from pydicom.filebase import DicomBytesIO
@@ -15,6 +16,13 @@ import pynvjpeg as pynv
 @pytest.fixture
 def jpeg2k_file():
     return Path(__file__).parent / "test_jpeg2k_dicom.dcm"
+
+
+@pytest.fixture
+def dicom_file_j2k_int16() -> Path:
+    filename = get_testdata_file("JPEG2000.dcm")
+    assert isinstance(filename, str)
+    return Path(filename)
 
 
 def test_read():
@@ -92,6 +100,51 @@ def test_decode_frames_jpeg2k(jpeg2k_file):
         delta = t2 - t1
         print(f"Delta: {delta}")
 
+        assert decoded.shape == (nf, dcm.Rows, dcm.Columns)
+        assert decoded.dtype == np.uint16
+        assert (decoded == actual).all()
+
+
+def test_get_frames(jpeg2k_file):
+    with pydicom.dcmread(jpeg2k_file) as dcm:
+        nf = int(dcm.NumberOfFrames)
+        frame_info = pynv.get_frame_offsets(dcm.PixelData, len(dcm.PixelData))
+        for frame, (offset, length) in zip(generate_pixel_data_frame(dcm.PixelData, nf), frame_info):
+            assert frame == dcm.PixelData[offset : offset + length]
+
+
+def test_get_frames_real():
+    jpeg2k_file = "/mnt/storage/unpacked/organized/vega/vega_jan2023/cases/Vega-264SP00069/Vega-264SP00069_99990101_6033/tomo_lcc_1.dcm"
+    with pydicom.dcmread(jpeg2k_file) as dcm:
+        nf = int(dcm.NumberOfFrames)
+        frame_info = pynv.get_frame_offsets(dcm.PixelData, len(dcm.PixelData))
+        for frame, (offset, length) in zip(generate_pixel_data_frame(dcm.PixelData, nf), frame_info):
+            assert frame == dcm.PixelData[offset : offset + length]
+            pynv.decode_jpeg2k(frame, len(frame), dcm.Rows, dcm.Columns)
+
+
+@pytest.mark.xfail(reason="int16 not supported")
+def test_decode_int16_frames_jpeg2k(dicom_file_j2k_int16):
+    with pydicom.dcmread(dicom_file_j2k_int16) as dcm:
+        nf = int(dcm.NumberOfFrames)
+        actual = dcm.pixel_array
+        t1 = time()
+        decoded = pynv.decode_frames_jpeg2k(dcm.PixelData, len(dcm.PixelData), dcm.Rows, dcm.Columns, 2)
+        t2 = time()
+        delta = t2 - t1
+        print(f"Delta: {delta}")
+
+        assert decoded.shape == (nf, dcm.Rows, dcm.Columns)
+        assert decoded.dtype == np.uint16
+        assert (decoded == actual).all()
+
+
+def test_decode_real():
+    dicom_file_j2k_int16 = "/mnt/storage/unpacked/organized/vega/vega_jan2023/cases/Vega-264SP00167/Vega-264SP00167_99990101_4519/tomo_rmlo_1.dcm"
+    with pydicom.dcmread(dicom_file_j2k_int16) as dcm:
+        actual = dcm.pixel_array
+        nf = int(dcm.NumberOfFrames)
+        decoded = pynv.decode_frames_jpeg2k(dcm.PixelData, len(dcm.PixelData), dcm.Rows, dcm.Columns, 2)
         assert decoded.shape == (nf, dcm.Rows, dcm.Columns)
         assert decoded.dtype == np.uint16
         assert (decoded == actual).all()
