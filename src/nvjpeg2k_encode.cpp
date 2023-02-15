@@ -190,14 +190,12 @@ std::vector<EncodedFrame> encode(
   // create config for desired encoding output
   nvjpeg2kImageComponentInfo_t imageComponentInfo;
   nvjpeg2kEncodeConfig_t encodeConfig = getEncodeConfig(&imageComponentInfo, rows, cols);
-  std::cout << "Rows: " << encodeConfig.image_height << " Cols " << encodeConfig.image_width << std::endl;
 
   // Allocate GPU memory to hold frames for encode
   // Allocated size will be 2D array of size (batchSize * Rows x Pitch)
   unsigned char* devBuffer;
   size_t pitchInBytes;
   CHECK_CUDA_NO_RETURN(deviceMalloc<uint16_t>(&devBuffer, &pitchInBytes, batchSize * rows, cols));
-  std::cout << "Allocated with pitch " << pitchInBytes << std::endl;
 
   // Loop over frames to be encoded
   std::vector<EncodedFrame> output;
@@ -208,11 +206,9 @@ std::vector<EncodedFrame> encode(
 
     // Seek hostBuffer to the start of this frame
     uint16_t* hostBufferThisFrame = seekToFrameNumber<uint16_t>((uint16_t*)buffer, cols, rows, frameIndex);
-    std::cout << "Host buffer " << (void*)hostBufferThisFrame << " from start " << (void*)buffer << std::endl;
 
     // Seek devBuffer to the index of the frame we are encoding within the batch
     unsigned char* devBufferThisFrame = seekToFrameNumber<unsigned char>(devBuffer, pitchInBytes, rows, frameIndex % batchSize);
-    std::cout << "Dev buffer " << (void*)devBufferThisFrame << " from start " << (void*)devBuffer << std::endl;
 
     // Ensure the previous stage has finished
     if(frameIndex >= PIPELINE_STAGES) {
@@ -287,11 +283,7 @@ std::vector<py::bytes> encode_frames(
 
   std::vector<py::bytes> resultBytes;
   for(auto frame: result) {
-    std::cout << "OUT SIZE " << frame.size() << std::endl;
     resultBytes.push_back(py::bytes(reinterpret_cast<const char*>(frame.data()), frame.size()));
-    //for(int i = 0; i < 100; i++) {
-    //  std::cout << std::hex << (int)frame.at(i);
-    //}
   }
 
   return resultBytes;
