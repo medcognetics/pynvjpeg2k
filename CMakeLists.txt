@@ -9,8 +9,10 @@
 # 
 
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+#set(CMAKE_CUDA_COMPILER  /usr/local/cuda-12.0/bin/nvcc)
 
-project(pynvjpeg2k LANGUAGES CXX CUDA)
+project(pynvjpeg LANGUAGES CXX CUDA)
+
 
 # find pybind11
 set(pybind11_DIR extern/pybind11)
@@ -50,14 +52,16 @@ if(UNIX)
 endif()
 
   
-pybind11_add_module(pynvjpeg 
+pybind11_add_module(
+  ${PROJECT_NAME} 
+  SHARED
   "src/pynvjpeg.cpp" 
   "src/nvjpeg2k_encode.cpp" 
   "src/nvjpeg2k_decode.cpp" 
   "src/dicom.cpp" 
   "src/helpers.cpp"
 )
-target_link_libraries(pynvjpeg PUBLIC ${NVJPEG2K_LIB} ${CUDART_LIB})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${NVJPEG2K_LIB} ${CUDART_LIB})
 
 
 

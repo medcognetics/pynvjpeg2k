@@ -23,7 +23,7 @@ struct EncodeParams_t
 
 typedef std::vector<unsigned char> EncodedFrame;
 
-std::map<std::string, uint32_t> getImageInfo(const char* buffer,  const size_t inBufSize);
+py::dict getImageInfo(const char* buffer,  const size_t inBufSize);
 
 nvjpeg2kEncodeConfig_t getEncodeConfig(
   nvjpeg2kImageComponentInfo_t *imageComponentInfo,

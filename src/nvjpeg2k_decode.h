@@ -36,7 +36,7 @@ int _decode_frames(
 );
 
 
-std::map<std::string, uint32_t> getImageInfo(
+py::dict getImageInfo(
     const char* buffer, 
     const size_t inBufSize
 );

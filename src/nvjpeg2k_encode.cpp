@@ -21,28 +21,54 @@ namespace pynvjpeg {
 namespace jpeg2k {
 
 
-std::map<std::string, uint32_t> getImageInfo(
+py::dict getImageInfo(
     const char* buffer, 
     const size_t inBufSize
 ) {
+  // Initialize stream and handle
   nvjpeg2kHandle_t handle;
   nvjpeg2kStream_t stream;
-  nvjpeg2kCreateSimple(&handle);
-  nvjpeg2kStreamCreate(&stream);
+  CHECK_NVJPEG2K_NO_RETURN(nvjpeg2kCreateSimple(&handle));
+  CHECK_NVJPEG2K_NO_RETURN(nvjpeg2kStreamCreate(&stream));
 
+  // Parse stream and get image info
   nvjpeg2kImageInfo_t imageInfo;
   CHECK_NVJPEG2K_NO_RETURN(nvjpeg2kStreamParse(handle, (unsigned char*)buffer, inBufSize, 0, 0, stream));
   CHECK_NVJPEG2K_NO_RETURN(nvjpeg2kStreamGetImageInfo(stream, &imageInfo));
+  
+  // Assign image info to dictionary
+  py::dict result;
+  result["width"] = imageInfo.image_width;
+  result["height"] = imageInfo.image_height;
+  result["tile_height"] = imageInfo.tile_height;
+  result["tile_width"] = imageInfo.tile_width;
+  result["num_tiles_x"] = imageInfo.num_tiles_x;
+  result["num_tiles_y"] = imageInfo.num_tiles_y;
+  result["num_components"] = imageInfo.num_components;
 
-  std::map<std::string, uint32_t> result{
-    {"width", imageInfo.image_width}, 
-    {"height", imageInfo.image_height}, 
-    {"tile_height", imageInfo.tile_height}, 
-    {"tile_width", imageInfo.tile_width}, 
-    {"num_tiles_x", imageInfo.num_tiles_x}, 
-    {"num_tiles_y", imageInfo.num_tiles_y}, 
-    {"num_components", imageInfo.num_components}
-  };
+  // Read component info
+  std::vector<nvjpeg2kImageComponentInfo_t> imageComponentInfo;
+  imageComponentInfo.resize(imageInfo.num_components);
+  for (uint32_t c = 0; c < imageInfo.num_components; c++)
+  {
+      CHECK_NVJPEG2K_NO_RETURN(nvjpeg2kStreamGetImageComponentInfo(stream, &imageComponentInfo[c], c));
+  }
+
+  // Assign component info to dictionary
+  py::list componentInfoResult;
+  for (auto comp : imageComponentInfo) {
+    py::dict infoThisComp;
+    infoThisComp["width"] = comp.component_width;
+    infoThisComp["height"] = comp.component_height;
+    infoThisComp["precision"] = comp.precision;
+    infoThisComp["sign"] = comp.sgn;
+    componentInfoResult.append(infoThisComp);
+  }
+  result["component_info"] = componentInfoResult;
+
+  // Cleanup and return
+  CHECK_NVJPEG2K_NO_RETURN(nvjpeg2kDestroy(handle));
+  CHECK_NVJPEG2K_NO_RETURN(nvjpeg2kStreamDestroy(stream));
   return result;
 }
 
@@ -270,6 +296,7 @@ std::vector<py::bytes> encode_frames(
 
   return resultBytes;
 }
+
 
 void pybind_init_enc(py::module &m) {
   m.def(
