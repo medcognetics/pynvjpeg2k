@@ -41,12 +41,14 @@ cudaError_t deviceToHostCopy(
 ) {
   const size_t hostBufPitchInBytes = cols * sizeof(D);
   const size_t copySize = cols * sizeof(D);
+  cudaError_t err = cudaSuccess;
   if (stream == NULL) {
-    return cudaMemcpy2D(hostBuf, hostBufPitchInBytes, (D *)deviceBuf, deviceBufPitchInBytes, copySize, rows, cudaMemcpyDeviceToHost);
+    err = cudaMemcpy2D(hostBuf, hostBufPitchInBytes, (void*)deviceBuf, deviceBufPitchInBytes, copySize, rows, cudaMemcpyDeviceToHost);
   }
   else {
-    return cudaMemcpy2DAsync(hostBuf, hostBufPitchInBytes, (D *)deviceBuf, deviceBufPitchInBytes, copySize, rows, cudaMemcpyDeviceToHost, *stream);
+    err = cudaMemcpy2DAsync(hostBuf, hostBufPitchInBytes, (void*)deviceBuf, deviceBufPitchInBytes, copySize, rows, cudaMemcpyDeviceToHost, *stream);
   }
+  return err;
 }
 
 

@@ -91,6 +91,15 @@ size_t getNumberOfFragments(const char* buffer, size_t size) {
 }
 
 
+py::list getFramePositions(const char* buffer, size_t size) {
+  std::vector<FrameInfo_t> frameInfo =  getFrameInfo(buffer, size);
+  py::list result;
+  for (auto& frame : frameInfo) {
+    result.append(py::make_tuple(frame.offset, frame.length));
+  }
+  return result;
+}
+
 
 void pybind_init(py::module &m) {
   m.def(
@@ -107,6 +116,11 @@ void pybind_init(py::module &m) {
     "_get_num_fragments", 
     &getNumberOfFragments,
     "read"
+  );
+  m.def(
+    "get_frame_offsets", 
+    &getFramePositions,
+    "Get the frame offsets"
   );
 }
 
