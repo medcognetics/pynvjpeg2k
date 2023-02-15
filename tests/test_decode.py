@@ -14,14 +14,16 @@ import pynvjpeg as pynv
         ("dicom_file_j2k_uint16"),
         pytest.param("dicom_file_j2k_int16", marks=pytest.mark.xfail(reason="int16 not supported", strict=True)),
         pytest.param("dicom_file_jpext", marks=pytest.mark.xfail(reason="not JPEG2000", strict=True)),
+        ("dicom_file_j2k_2d"),
     ],
 )
 def test_decode_jpeg2k(dcm):
-    nf = int(dcm.NumberOfFrames)
+    nf = int(getattr(dcm, "NumberOfFrames", 1))
     actual = dcm.pixel_array
     for i, frame in enumerate(generate_pixel_data_frame(dcm.PixelData, nf)):
         decoded = pynv.decode_jpeg2k(frame, len(frame), dcm.Rows, dcm.Columns)
-        assert (decoded == actual[i]).all()
+        actual_frame = actual[i] if actual.ndim > 2 else actual
+        assert (decoded == actual_frame).all()
 
 
 @pytest.mark.parametrize(
@@ -30,10 +32,11 @@ def test_decode_jpeg2k(dcm):
         ("dicom_file_j2k_uint16"),
         pytest.param("dicom_file_j2k_int16", marks=pytest.mark.xfail(reason="int16 not supported", strict=True)),
         pytest.param("dicom_file_jpext", marks=pytest.mark.xfail(reason="not JPEG2000", strict=True)),
+        pytest.param("dicom_file_j2k_2d", marks=pytest.mark.xfail(reason="decode_frames requires 2d", strict=True)),
     ],
 )
 def test_decode_frames_jpeg2k(dcm):
-    nf = int(dcm.NumberOfFrames)
+    nf = int(getattr(dcm, "NumberOfFrames", 1))
     actual = dcm.pixel_array
     decoded = pynv.decode_frames_jpeg2k(dcm.PixelData, len(dcm.PixelData), dcm.Rows, dcm.Columns, 2)
     assert decoded.shape == (nf, dcm.Rows, dcm.Columns)

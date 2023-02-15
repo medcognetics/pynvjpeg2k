@@ -35,6 +35,13 @@ def dicom_file_jpl14() -> Path:
 
 
 @pytest.fixture
+def dicom_file_j2k_2d() -> Path:
+    filename = get_testdata_file("RG1_J2KR.dcm")
+    assert isinstance(filename, str)
+    return Path(filename)
+
+
+@pytest.fixture
 def dcm(request, filefixture):
     filepath = request.getfixturevalue(filefixture)
     with pydicom.dcmread(filepath) as dcm:
