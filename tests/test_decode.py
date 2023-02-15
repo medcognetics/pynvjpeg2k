@@ -13,6 +13,7 @@ import pynvjpeg as pynv
     [
         ("dicom_file_j2k_uint16"),
         pytest.param("dicom_file_j2k_int16", marks=pytest.mark.xfail(reason="int16 not supported", strict=True)),
+        pytest.param("dicom_file_jpext", marks=pytest.mark.xfail(reason="not JPEG2000", strict=True)),
     ],
 )
 def test_decode_jpeg2k(dcm):
@@ -28,6 +29,7 @@ def test_decode_jpeg2k(dcm):
     [
         ("dicom_file_j2k_uint16"),
         pytest.param("dicom_file_j2k_int16", marks=pytest.mark.xfail(reason="int16 not supported", strict=True)),
+        pytest.param("dicom_file_jpext", marks=pytest.mark.xfail(reason="not JPEG2000", strict=True)),
     ],
 )
 def test_decode_frames_jpeg2k(dcm):

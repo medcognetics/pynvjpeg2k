@@ -47,6 +47,8 @@ def test_get_num_fragments(dcm, exp):
     [
         ("dicom_file_j2k_uint16", True),
         ("dicom_file_j2k_int16", True),
+        ("dicom_file_jpext", False),
+        ("dicom_file_jpl14", False),
     ],
 )
 def test_is_valid_jpeg2k(frame, exp):

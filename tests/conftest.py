@@ -21,6 +21,20 @@ def dicom_file_j2k_int16() -> Path:
 
 
 @pytest.fixture
+def dicom_file_jpext() -> Path:
+    filename = get_testdata_file("JPGExtended.dcm")
+    assert isinstance(filename, str)
+    return Path(filename)
+
+
+@pytest.fixture
+def dicom_file_jpl14() -> Path:
+    filename = get_testdata_file("JPEG-LL.dcm")
+    assert isinstance(filename, str)
+    return Path(filename)
+
+
+@pytest.fixture
 def dcm(request, filefixture):
     filepath = request.getfixturevalue(filefixture)
     with pydicom.dcmread(filepath) as dcm:
