@@ -17,6 +17,13 @@ commands:
                 name: Install static type checker
                 command: npm ci
 
+    setup_cuda:
+        steps:
+            - run: sudo apt update
+            - run: 
+                name: Setup CUDA
+                command: sudo apt install -y nvidia-cuda-toolkit
+
 
 jobs:
     check_code_quality:
@@ -24,6 +31,7 @@ jobs:
             - image: cimg/python:3.10
         steps:
             - checkout
+            - setup_cuda
             - run: 
                 name: Run quality tests
                 command: make quality
@@ -33,6 +41,7 @@ jobs:
             - image: cimg/python:3.10
         steps:
             - checkout
+            - setup_cuda
             - run:
                 name: Install dependencies
                 command: make init
