@@ -36,9 +36,21 @@ int _decode_frames(
 );
 
 
-std::map<std::string, uint32_t> getImageInfo(
-    const char* buffer, 
-    const size_t inBufSize
+py::dict getImageInfo(
+    const char* buffer,
+    const size_t size
+);
+
+
+int checkStream(
+    const char* buffer,
+    const size_t size
+);
+
+
+bool isValid(
+    const char* buffer,
+    const size_t size
 );
 
 
@@ -56,9 +68,9 @@ std::map<std::string, uint32_t> getImageInfo(
  */
 py::array_t<uint16_t> decode(
     const char* buffer, 
-    const size_t inBufSize, 
-    const size_t rows, 
-    const size_t cols
+    const size_t inBufSize,
+    const std::size_t rows, 
+    const std::size_t cols
 ); 
 
 
@@ -78,8 +90,8 @@ py::array_t<uint16_t> decode(
 py::array_t<uint16_t> decode_frames(
     const char* buffer,
     size_t size,
-    const size_t rows, 
-    const size_t cols,
+    const std::size_t rows, 
+    const std::size_t cols,
     const int batchSize = 4
 );
 

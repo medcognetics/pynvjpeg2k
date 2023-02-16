@@ -63,7 +63,8 @@ namespace py = pybind11;
         if (_e != NVJPEG2K_STATUS_SUCCESS)                                                                  \
         {                                                                                                   \
             std::stringstream msg; \
-            msg << "NVJPEG2K failure: '#" << _e << "' " << nvjpegGetErrorString(_e) << " at " << __FILE__ << ":" << __LINE__ << std::endl; \
+            msg << "NVJPEG2K failure: '#" << _e << "' " << pynvjpeg::nvjpegGetErrorString(_e) << " at " << __FILE__ << ":" << __LINE__ << std::endl; \
+            std::cout << msg.str(); \
             throw std::runtime_error(msg.str());\
         }                                                                                                   \
     }
@@ -75,7 +76,7 @@ namespace py = pybind11;
         if (_e != NVJPEG_STATUS_SUCCESS)                                                                  \
         {                                                                                                   \
             std::stringstream msg; \
-            msg << "NVJPEG failure: '#" << _e << "' " << nvjpegGetErrorString(_e) << " at " << __FILE__ << ":" << __LINE__ << std::endl; \
+            msg << "NVJPEG failure: '#" << _e << "' " << pynvjpeg::nvjpegGetErrorString(_e) << " at " << __FILE__ << ":" << __LINE__ << std::endl; \
             throw std::runtime_error(msg.str());\
         }                                                                                                   \
     }

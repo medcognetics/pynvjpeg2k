@@ -20,6 +20,32 @@ namespace pynvjpeg {
 namespace jpeg2k {
 
 
+int checkStream(
+    const char* buffer,
+    const size_t size
+) {
+  // Initialize stream and handle
+  nvjpeg2kHandle_t handle;
+  nvjpeg2kStream_t stream;
+  CHECK_NVJPEG2K(nvjpeg2kCreateSimple(&handle));
+  CHECK_NVJPEG2K(nvjpeg2kStreamCreate(&stream));
+
+  // Parse stream and get image info
+  nvjpeg2kImageInfo_t imageInfo;
+  CHECK_NVJPEG2K(nvjpeg2kStreamParse(handle, (unsigned char*)buffer, size, 0, 0, stream));
+  CHECK_NVJPEG2K(nvjpeg2kStreamGetImageInfo(stream, &imageInfo));
+  return EXIT_SUCCESS;
+}
+
+
+bool isValid(
+    const char* buffer,
+    const size_t size
+) {
+  return checkStream(buffer, size) == EXIT_SUCCESS;
+}
+
+
 int _async_frame_decode(
     const unsigned char *srcBuffer, 
     const std::size_t srcBufSize, 
@@ -50,7 +76,7 @@ int _async_frame_decode(
 int _decode_frames(
     std::vector<const char*> frameBuffers,
     std::vector<size_t> bufferSizes,
-    const std::size_t rows, 
+    const std::size_t rows,
     const std::size_t cols,
     uint16_t *outBuffer,
     size_t batchSize 
@@ -110,10 +136,33 @@ int _decode_frames(
       CHECK_CUDA(cudaStreamSynchronize(params->cudaStream));
     }
     
-    // Submit decode job
+    // Parse the stream
     CHECK_NVJPEG2K(nvjpeg2kStreamParse(*params->handle, buffer, size, 0, 0, params->jpegStream));
+
+    // Read image info
+    nvjpeg2kImage_t outputImage;
+    nvjpeg2kImageInfo_t imageInfo;
+    CHECK_NVJPEG2K(nvjpeg2kStreamGetImageInfo(params->jpegStream, &imageInfo));
+
+    if (imageInfo.num_components != 1) {
+      throw std::invalid_argument("Only single channel images are supported");
+    }
+
+
+    // Update component info based on JPEG2K header
+    std::vector<nvjpeg2kImageComponentInfo_t> imageComponentInfo;
+    imageComponentInfo.resize(imageInfo.num_components);
+    for (uint32_t c = 0; c < imageInfo.num_components; c++)
+    {
+        CHECK_NVJPEG2K(nvjpeg2kStreamGetImageComponentInfo(params->jpegStream, &imageComponentInfo[c], c));
+        if (imageComponentInfo[c].sgn != 0) {
+          throw std::invalid_argument("Only unsigned images are supported");
+        }
+    }
+
+    // Submit decode job
     err = _async_frame_decode(buffer, size, params, devBufferThisFrame, pitchInBytes, &params->cudaStream);
-    if (err) {
+    if (err != EXIT_SUCCESS) {
       std::cerr << "Error decoding frame at index " << frameIndex << std::endl;
       break;
     }
@@ -234,6 +283,11 @@ py::array_t<uint16_t> decode_frames(
 
 
 void pybind_init_dec(py::module &m) {
+  m.def(
+    "is_valid_jpeg2k", 
+    &isValid,
+    "validate"
+  );
   m.def(
     "get_image_info_jpeg2k", 
     &getImageInfo,
