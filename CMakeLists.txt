@@ -7,9 +7,7 @@
 # distribution of this software and related documentation without an express
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 # 
-
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-#set(CMAKE_CUDA_COMPILER  /usr/local/cuda-12.0/bin/nvcc)
 
 project(pynvjpeg LANGUAGES CXX CUDA)
 
@@ -36,8 +34,6 @@ include_directories(
   SYSTEM ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
 )
 
-find_library(NVJPEG_LIBRARY nvjpeg ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
-
 find_library(NVJPEG2K_LIB
     NAMES nvjpeg2k
     PATHS ${NVJPEG2K_PATH}/lib)
@@ -55,14 +51,11 @@ endif()
 pybind11_add_module(
   ${PROJECT_NAME} 
   SHARED
-  "src/pynvjpeg.cpp" 
-  "src/nvjpeg2k_encode.cpp" 
-  "src/nvjpeg2k_decode.cpp" 
-  "src/dicom.cpp" 
-  "src/helpers.cpp"
+  "pynvjpeg/pynvjpeg.cpp" 
+  "pynvjpeg/nvjpeg2k_encode.cpp" 
+  "pynvjpeg/nvjpeg2k_decode.cpp" 
+  "pynvjpeg/dicom.cpp" 
+  "pynvjpeg/helpers.cpp"
 )
 target_link_libraries(${PROJECT_NAME} PUBLIC ${NVJPEG2K_LIB} ${CUDART_LIB})
-
-
-
-
+install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${PROJECT_NAME})
