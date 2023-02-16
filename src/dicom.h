@@ -29,6 +29,8 @@ std::vector<FrameInfo_t> getFrameInfo(const char* buffer, size_t size);
 
 size_t getNumberOfFragments(const char* buffer, size_t size);
 
+py::list getFramePositions(const char* buffer, size_t size);
+
 void pybind_init(py::module &m);
 
 }

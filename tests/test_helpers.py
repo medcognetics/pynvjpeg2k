@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-from pydicom.encaps import get_nr_fragments
+from pydicom.encaps import generate_pixel_data_frame, get_nr_fragments
 from pydicom.filebase import DicomBytesIO
 
 import pynvjpeg as pynv
@@ -40,6 +40,35 @@ def test_get_num_fragments(dcm, exp):
     fp.is_little_endian = True
     fp.seek(8)
     assert actual == exp == get_nr_fragments(fp)
+
+
+@pytest.mark.parametrize(
+    "filefixture,exp",
+    [
+        ("dicom_file_j2k_uint16", True),
+        ("dicom_file_j2k_int16", True),
+        ("dicom_file_jpext", False),
+        ("dicom_file_jpl14", False),
+    ],
+)
+def test_is_valid_jpeg2k(frame, exp):
+    actual = pynv.is_valid_jpeg2k(frame, len(frame))
+    assert actual == exp
+
+
+@pytest.mark.parametrize(
+    "filefixture",
+    [
+        ("dicom_file_j2k_uint16"),
+        ("dicom_file_j2k_int16"),
+    ],
+)
+def test_get_frames(dcm):
+    nf = int(dcm.NumberOfFrames)
+    frame_info = pynv.get_frame_offsets(dcm.PixelData, len(dcm.PixelData))
+    for frame, (offset, length) in zip(generate_pixel_data_frame(dcm.PixelData, nf), frame_info):
+        end = offset + length
+        assert frame == dcm.PixelData[offset:end]
 
 
 class TestGetImageInfo:
