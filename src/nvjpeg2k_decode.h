@@ -96,6 +96,28 @@ py::array_t<uint16_t> decode_frames(
 );
 
 
+/*
+ * Run batched decode on multiple frames with offsets
+ *
+ * Args:
+ *    buffer - Data buffer of multiple frames
+ *    bufferSizes - Size of each frame buffer
+ *    rows - Rows in output image
+ *    cols - Cols in output image
+ *    batchSize - Batch size for decoding
+ *    
+ * Returns:
+ *  3D array of decoded pixel data
+ */
+py::array_t<uint16_t> decode_framelist(
+    const char* buffer,
+    std::vector<size_t> bufferSizes,
+    const size_t rows, 
+    const size_t cols,
+    const int batchSize
+);
+
+
 void pybind_init_dec(py::module &m); 
 
 }

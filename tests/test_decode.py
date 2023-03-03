@@ -43,6 +43,25 @@ def test_decode_frames_jpeg2k(dcm):
     assert (decoded == actual).all()
 
 
+@pytest.mark.parametrize(
+    "filefixture",
+    [
+        ("dicom_file_j2k_uint16"),
+        pytest.param("dicom_file_j2k_int16", marks=pytest.mark.xfail(reason="int16 not supported", strict=True)),
+        pytest.param("dicom_file_jpext", marks=pytest.mark.xfail(reason="not JPEG2000", strict=True)),
+        ("dicom_file_j2k_2d"),
+    ],
+)
+def test_decode_framelist_jpeg2k(dcm):
+    nf = int(getattr(dcm, "NumberOfFrames", 1))
+    actual = dcm.pixel_array
+    frames = list(generate_pixel_data_frame(dcm.PixelData, nf))
+    lengths = [len(f) for f in frames]
+    decoded = pynv.decode_framelist_jpeg2k(b"".join(frames), lengths, dcm.Rows, dcm.Columns, 2)
+    assert decoded.shape == (nf, dcm.Rows, dcm.Columns)
+    assert (decoded == actual).all()
+
+
 def test_encode_decode():
     num_frames, rows, cols = 1, 512, 512
     x = np.random.randint(0, 1024, (num_frames, rows, cols), dtype=np.uint16)
