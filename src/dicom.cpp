@@ -79,7 +79,9 @@ std::vector<FrameInfo_t> getFrameInfo(const char* buffer, size_t size) {
       break;
     }
     else {
-      throw std::invalid_argument("Unexpected tag");
+      std::stringstream ss;
+      ss << "Unexpected tag: " << std::hex << tag;
+      throw std::runtime_error(ss.str());
     }
   }
   return result;

@@ -140,7 +140,6 @@ int _decode_frames(
     CHECK_NVJPEG2K(nvjpeg2kStreamParse(*params->handle, buffer, size, 0, 0, params->jpegStream));
 
     // Read image info
-    nvjpeg2kImage_t outputImage;
     nvjpeg2kImageInfo_t imageInfo;
     CHECK_NVJPEG2K(nvjpeg2kStreamGetImageInfo(params->jpegStream, &imageInfo));
 
@@ -276,7 +275,66 @@ py::array_t<uint16_t> decode_frames(
   );
 
   if (err) {
-    throw std::invalid_argument("error");
+    std::stringstream ss;
+    ss << "Decode error " << err;
+    throw std::runtime_error(ss.str());
+  }
+  return outBuffer;
+}
+
+
+/*
+ * Run batched decode on multiple frames with offsets
+ *
+ * Args:
+ *    frameBuffers - Vector of frame buffers
+ *    bufferSizes - Size of each frame buffer
+ *    rows - Rows in output image
+ *    cols - Cols in output image
+ *    batchSize - Batch size for decoding
+ *    
+ * Returns:
+ *  3D array of decoded pixel data
+ */
+py::array_t<uint16_t> decode_framelist(
+    const char* buffer,
+    std::vector<size_t> bufferSizes,
+    const size_t rows, 
+    const size_t cols,
+    const int batchSize
+) {
+  const size_t numFrames = bufferSizes.size();
+
+  // Allocate output array
+  py::array_t<uint16_t> outBuffer(
+    {numFrames, rows, cols}, 
+    {rows*cols*sizeof(uint16_t), cols*sizeof(uint16_t), sizeof(uint16_t)}
+  );
+
+  // Pybind11 has trouble with std::vector<const char*> as an argument
+  // so we need to convert the const char* to a vector of const char*
+  std::vector<const char*> frameBuffers;
+  size_t totalOffset = 0;
+  for (auto x : bufferSizes) {
+    const char* frameBuffer = buffer + totalOffset;
+    frameBuffers.push_back(frameBuffer);
+    totalOffset += x;
+  }
+
+  // Run decode over frames
+  int err = _decode_frames(
+      frameBuffers,
+      bufferSizes,
+      rows, 
+      cols,
+      (uint16_t *)outBuffer.data(),
+      batchSize
+  );
+
+  if (err) {
+    std::stringstream ss;
+    ss << "Decode error " << err;
+    throw std::runtime_error(ss.str());
   }
   return outBuffer;
 }
@@ -302,6 +360,11 @@ void pybind_init_dec(py::module &m) {
     "decode_frames_jpeg2k", 
     &decode_frames,
     "Run decode on frames"
+  );
+  m.def(
+    "decode_framelist_jpeg2k", 
+    &decode_framelist,
+    "Run decode on sequence of frames"
   );
 }
 

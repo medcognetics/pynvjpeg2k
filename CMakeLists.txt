@@ -39,6 +39,7 @@ include_directories(
 find_library(NVJPEG_LIBRARY nvjpeg ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
 
 find_library(NVJPEG2K_LIB
+    REQUIRED
     NAMES nvjpeg2k
     PATHS ${NVJPEG2K_PATH}/lib)
 
@@ -61,7 +62,7 @@ pybind11_add_module(
   "src/dicom.cpp" 
   "src/helpers.cpp"
 )
-target_link_libraries(${PROJECT_NAME} PUBLIC ${NVJPEG2K_LIB} ${CUDART_LIB})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${NVJPEG2K_LIB} ${CUDART_LIB})
 
 
 
