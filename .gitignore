@@ -140,3 +140,4 @@ coverage.xml
 **/build
 !libnvjpeg/lib
 !libnvjpeg/lib/*.so
+.pdm.toml
