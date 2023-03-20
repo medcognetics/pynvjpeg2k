@@ -1,17 +1,36 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]   # PEP 508 specifications.
-build-backend = "setuptools.build_meta"
+requires = ["pdm-pep517>=1.0"]
+build-backend = "pdm.pep517.api"
+
+[project]
+name = "pynvjpeg"
+description = ""
+requires-python = ">=3.8"
+authors = [
+    {name = "Scott Chase Waggener", email = "tidalpaladin@protonmail.com"},
+]
+dependencies = [
+  "numpy"
+]
+readme = "README.md"
+license = {text = "Apache"}
+dynamic = ["version"]
+
+[project.optional-dependencies]
+
+[tool.autoflake]
+remove-all-unused-imports = true
+remove-unused-variables = true
 
 [tool.autopep8]
 max_line_length = 120
-ignore = "E501,W6"  # or ["E501", "W6"]
+ignore = "E501,W6,E203"
 in-place = true
 recursive = true
 aggressive = 3
 
 [tool.black]
 line-length = 120
-target-version = ['py37']
 
 [tool.isort]
 ensure_newline_before_comments = true
@@ -23,5 +42,49 @@ multi_line_output = 3
 use_parentheses = false
 
 [tool.pyright]
-venvPath = "."
-venv = "env"
+
+[tool.pdm]
+version = { source = "scm" }
+
+[tool.pdm.build]
+setup-script = "build_setuptools.py"
+run-setuptools = true
+includes = [
+  "libnvjpeg/lib",
+  "src/"
+]
+
+[tool.pdm.dev-dependencies]
+test = [
+  "pytest",
+  "pytest-mock",
+  "pytest-cov",
+  "coverage",
+  "pdbpp",
+  "pydicom",
+  "pylibjpeg",
+  "pylibjpeg-libjpeg",
+  "pylibjpeg-openjpeg",
+  "setuptools",
+]
+quality = [
+  "autoflake",
+  "autopep8",
+  "black",
+  "flake8",
+  "isort",
+]
+
+[tool.pytest.ini_options]
+markers = [
+  "ci_skip",
+]
+filterwarnings = [
+  "ignore:.*in the dataset does not match.*:UserWarning",
+  "ignore:.*Invalid value for VR.*:UserWarning",
+  "ignore:.*doesn't match the JPEG 2000 data.*:UserWarning",
+]
+
+# Sample script config
+#[project.scripts]
+#foo = "project.cli.__main__:main"

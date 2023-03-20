@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from setuptools import Extension, setup
+from setuptools import Extension
 from setuptools.command.build_ext import build_ext
 
 
@@ -123,11 +123,6 @@ class CMakeBuild(build_ext):
         subprocess.run(["cmake", "--build", "."] + build_args, cwd=build_temp, check=True)
 
 
-# The information here can also be placed in setup.cfg - better separation of
-# logic and declaration, and simpler if you include description/version in a file.
-if __name__ == "__main__":
-    setup(
-        ext_modules=[CMakeExtension("pynvjpeg")],
-        cmdclass={"build_ext": CMakeBuild},
-        zip_safe=False,
-    )
+def build(setup_kwargs):
+    setup_kwargs.update(ext_modules=[CMakeExtension("pynvjpeg")])
+    setup_kwargs.update(cmdclass={"build_ext": CMakeBuild})
