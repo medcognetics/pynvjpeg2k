@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from setuptools import Extension, setup
+from setuptools import Extension
 from setuptools.command.build_ext import build_ext
 
 
@@ -26,8 +26,8 @@ PLAT_TO_CMAKE = {
 # The name must be the _single_ output extension from the CMake build.
 # If you need multiple extensions, see scikit-build.
 class CMakeExtension(Extension):
-    def __init__(self, name: str, sourcedir: str = "") -> None:
-        super().__init__(name, sources=[])
+    def __init__(self, name: str, sourcedir: str = "", **kwargs) -> None:
+        super().__init__(name, sources=[], **kwargs)
         self.sourcedir = os.fspath(Path(sourcedir).resolve())
 
 
@@ -123,11 +123,10 @@ class CMakeBuild(build_ext):
         subprocess.run(["cmake", "--build", "."] + build_args, cwd=build_temp, check=True)
 
 
-# The information here can also be placed in setup.cfg - better separation of
-# logic and declaration, and simpler if you include description/version in a file.
-if __name__ == "__main__":
-    setup(
-        ext_modules=[CMakeExtension("pynvjpeg")],
-        cmdclass={"build_ext": CMakeBuild},
-        zip_safe=False,
+def build(setup_kwargs):
+    module = CMakeExtension(
+        "pynvjpeg",
+        extra_objects=['./libnvjpeg/lib/libnvjpeg.so', './libnvjpeg/lib/libnvjpeg.so.0'],
     )
+    setup_kwargs.update(ext_modules=[module])
+    setup_kwargs.update(cmdclass={"build_ext": CMakeBuild})
