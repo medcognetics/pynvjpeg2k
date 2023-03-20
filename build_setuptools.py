@@ -26,8 +26,8 @@ PLAT_TO_CMAKE = {
 # The name must be the _single_ output extension from the CMake build.
 # If you need multiple extensions, see scikit-build.
 class CMakeExtension(Extension):
-    def __init__(self, name: str, sourcedir: str = "") -> None:
-        super().__init__(name, sources=[])
+    def __init__(self, name: str, sourcedir: str = "", **kwargs) -> None:
+        super().__init__(name, sources=[], **kwargs)
         self.sourcedir = os.fspath(Path(sourcedir).resolve())
 
 
@@ -124,5 +124,9 @@ class CMakeBuild(build_ext):
 
 
 def build(setup_kwargs):
-    setup_kwargs.update(ext_modules=[CMakeExtension("pynvjpeg")])
+    module = CMakeExtension(
+        "pynvjpeg",
+        extra_objects=['./libnvjpeg/lib/libnvjpeg.so', './libnvjpeg/lib/libnvjpeg.so.0'],
+    )
+    setup_kwargs.update(ext_modules=[module])
     setup_kwargs.update(cmdclass={"build_ext": CMakeBuild})

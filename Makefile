@@ -39,7 +39,7 @@ init: ## pulls submodules and initializes virtual environment
 	git submodule update --init --recursive
 	which pdm || pip install --user pdm
 	pdm venv create -n $(PROJECT)
-	pdm install -d
+	pdm install -d --no-editable
 
 node_modules: 
 ifeq (, $(shell which npm))
