@@ -172,14 +172,16 @@ int _decode_frames(
   }
 
   // Free all resources
-  CHECK_CUDA(cudaDeviceSynchronize());
-  CHECK_CUDA(cudaFree(devBuffer));
-  CHECK_NVJPEG2K(nvjpeg2kDestroy(handle));
   for (size_t p=0; p < PIPELINE_STAGES; p++) {
+    DecodeParams_t *params = &stageParams[p];
+    CHECK_CUDA(cudaStreamSynchronize(params->cudaStream));
+    CHECK_CUDA(cudaStreamDestroy(stageParams[p].cudaStream));
     CHECK_NVJPEG2K(nvjpeg2kStreamDestroy(stageParams[p].jpegStream));
     CHECK_NVJPEG2K(nvjpeg2kDecodeStateDestroy(stageParams[p].decodeState));
-    CHECK_CUDA(cudaStreamDestroy(stageParams[p].cudaStream));
   }
+  CHECK_CUDA(cudaFree(devBuffer));
+  CHECK_NVJPEG2K(nvjpeg2kDestroy(handle));
+  CHECK_CUDA(cudaDeviceReset());
   return err;
 }
 
@@ -221,6 +223,7 @@ py::array_t<uint16_t> decode(
   );
 
   if (err) {
+    cudaDeviceReset();
     throw std::invalid_argument("error");
   }
   return outBuffer;
