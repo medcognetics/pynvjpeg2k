@@ -50,7 +50,8 @@ version = { source = "scm" }
 setup-script = "build_setuptools.py"
 run-setuptools = true
 includes = [
-  "libnvjpeg/",
+  "libnvjpeg",
+  "*.so.*",
   "src/"
 ]
 
@@ -88,3 +89,7 @@ filterwarnings = [
 # Sample script config
 #[project.scripts]
 #foo = "project.cli.__main__:main"
+
+[tool.pdm.scripts]
+# Check that everything linked properly, otherwise the import will fail at runtime
+post_install = "pdm run python -c 'import pynvjpeg'"

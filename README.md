@@ -7,6 +7,21 @@ Only decompression of single channel inputs has been implemented.
 This library depends on `libnvjpeg2k`, which is provided only to developers in the Nvidia developer program. A copy
 of `libnvjpeg2k` has been provided with this repository since PyNVJPEG2K is currently a private MedCognetics repository.
 
+If you receive an error like the following:
+
+```
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ImportError: libnvjpeg2k.so.0: cannot open shared object file: No such file or directory
+```
+
+you may need to copy the included `libnvjpeg2k.so` files to your system's library path. For example, run
+
+```bash
+cp libnvjpeg/lib/libnvjpeg2k.so* /usr/lib/
+```
+
+It is unclear at this time if the build system for `pynvjpeg2k` can be configured to handle this automatically.
 
 ## Usage
 
