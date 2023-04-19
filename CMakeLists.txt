@@ -61,7 +61,7 @@ pybind11_add_module(
   "src/dicom.cpp" 
   "src/helpers.cpp"
 )
-target_link_libraries(${PROJECT_NAME} PRIVATE ${NVJPEG2K_LIB} ${CUDART_LIB})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${NVJPEG2K_LIB} ${CUDART_LIB})
 
 
 
