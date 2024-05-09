@@ -10,7 +10,8 @@ authors = [
     {name = "Scott Chase Waggener", email = "tidalpaladin@protonmail.com"},
 ]
 dependencies = [
-  "numpy"
+  "numpy",
+  "nvidia-nvjpeg2k-cu12",
 ]
 readme = "README.md"
 license = {text = "Apache"}
