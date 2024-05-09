@@ -51,7 +51,6 @@ version = { source = "scm" }
 setup-script = "build_setuptools.py"
 run-setuptools = true
 includes = [
-  "*.so.*",
   "src/"
 ]
 

@@ -12,8 +12,6 @@ cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
 project(pynvjpeg LANGUAGES CXX CUDA)
 
-# find python
-#find_package(Python COMPONENTS Interpreter Development)
 message(STATUS "Python Executable: ${Python_EXECUTABLE}")
 message(STATUS "Python Include Dirs: ${Python_INCLUDE_DIRS}")
 
@@ -33,11 +31,6 @@ include_directories(
   SYSTEM 
   ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
 )
-
-#find_library(NVJPEG2K_LIB
-#    nvjpeg2k
-#    PATHS ${Python_INCLUDE_DIRS}
-#)
 
 # Provided by nvidia-nvjpeg2k-cuX
 set(NVJPEG2K_LIB ${Python_INCLUDE_DIRS}/nvidia/nvjpeg2k/lib/libnvjpeg2k.so.0)
