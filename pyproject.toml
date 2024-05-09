@@ -1,5 +1,5 @@
 [build-system]
-requires = ["pdm-pep517>=1.0"]
+requires = ["pdm-pep517>=1.0", "nvidia-nvjpeg2k-cu12"]
 build-backend = "pdm.pep517.api"
 
 [project]
@@ -66,7 +66,6 @@ test = [
   "pylibjpeg-libjpeg",
   "pylibjpeg-openjpeg",
   "setuptools",
-  "nvidia-nvjpeg2k-cu12",
 ]
 quality = [
   "autoflake",
