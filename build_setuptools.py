@@ -5,6 +5,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from sysconfig import get_paths
 
 from setuptools import Extension
 from setuptools.command.build_ext import build_ext
@@ -52,7 +53,8 @@ class CMakeBuild(build_ext):
         # from Python.
         cmake_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}{os.sep}",
-            f"-DPYTHON_EXECUTABLE={sys.executable}",
+            f"-DPython_EXECUTABLE={sys.executable}",
+            f"-DPython_INCLUDE_DIRS={get_paths()['purelib']}",
             f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
             "-DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE",
             "-DCMAKE_INSTALL_RPATH=$ORIGIN",
@@ -121,14 +123,13 @@ class CMakeBuild(build_ext):
         if not build_temp.exists():
             build_temp.mkdir(parents=True)
 
-        subprocess.run(["cmake", ext.sourcedir] + cmake_args, cwd=build_temp, check=True)
-        subprocess.run(["cmake", "--build", "."] + build_args, cwd=build_temp, check=True)
+        subprocess.run(["cmake", "-S", ext.sourcedir, "-B", build_temp] + cmake_args, check=True)
+        subprocess.run(["cmake", "--build", build_temp] + build_args, check=True)
 
 
 def build(setup_kwargs):
     module = CMakeExtension(
         "pynvjpeg",
-        extra_objects=['./libnvjpeg/lib/libnvjpeg.so', './libnvjpeg/lib/libnvjpeg.so.0'],
     )
     setup_kwargs.update(ext_modules=[module])
     setup_kwargs.update(cmdclass={"build_ext": CMakeBuild})
