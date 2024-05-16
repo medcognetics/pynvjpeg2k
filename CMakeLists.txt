@@ -12,15 +12,12 @@ cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
 project(pynvjpeg LANGUAGES CXX CUDA)
 
+message(STATUS "Python Executable: ${Python_EXECUTABLE}")
+message(STATUS "Python Include Dirs: ${Python_INCLUDE_DIRS}")
 
 # find pybind11
 set(pybind11_DIR extern/pybind11)
 find_package(pybind11 REQUIRED)
-
-set(NVJPEG2K_PATH libnvjpeg)
-if(NOT NVJPEG2K_PATH)
-message(FATAL_ERROR, "NVJPEG2K_PATH not set")
-endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -31,16 +28,15 @@ set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_EXTENSIONS OFF)
 
 include_directories(
-  ${NVJPEG2K_PATH}/include
-  SYSTEM ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+  SYSTEM 
+  ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
 )
 
-find_library(NVJPEG_LIBRARY nvjpeg ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
-
-find_library(NVJPEG2K_LIB
-    REQUIRED
-    NAMES nvjpeg2k
-    PATHS ${NVJPEG2K_PATH}/lib)
+# Provided by nvidia-nvjpeg2k-cuX
+set(NVJPEG2K_LIB ${Python_INCLUDE_DIRS}/nvidia/nvjpeg2k/lib/libnvjpeg2k.so.0)
+message(STATUS "NVJPEG2K_LIBRARY at: ${NVJPEG2K_LIB}")
+set(NVJPEG2K_INCLUDE ${Python_INCLUDE_DIRS}/nvidia/nvjpeg2k/include)
+message(STATUS "NVJPEG2K_INCLUDE at: ${NVJPEG2K_INCLUDE}")
 
 find_library(CUDART_LIB 
     NAMES cudart
@@ -61,8 +57,5 @@ pybind11_add_module(
   "src/dicom.cpp" 
   "src/helpers.cpp"
 )
+target_include_directories(${PROJECT_NAME} PRIVATE ${NVJPEG2K_INCLUDE})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${NVJPEG2K_LIB} ${CUDART_LIB})
-
-
-
-
