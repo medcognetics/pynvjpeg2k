@@ -4,25 +4,6 @@ PyNVJPEG2K is a work in progress Python library to accelerate decompression and 
 Python bindings have not yet been implemented, but there is support for accelerated decoding using a standaclone C++ program.
 Only decompression of single channel inputs has been implemented.
 
-This library depends on `libnvjpeg2k`, which is provided only to developers in the Nvidia developer program. A copy
-of `libnvjpeg2k` has been provided with this repository since PyNVJPEG2K is currently a private MedCognetics repository.
-
-If you receive an error like the following:
-
-```
-Traceback (most recent call last):
-  File "<string>", line 1, in <module>
-ImportError: libnvjpeg2k.so.0: cannot open shared object file: No such file or directory
-```
-
-you may need to copy the included `libnvjpeg2k.so` files to your system's library path. For example, run
-
-```bash
-cp libnvjpeg/lib/libnvjpeg2k.so* /usr/lib/
-```
-
-It is unclear at this time if the build system for `pynvjpeg2k` can be configured to handle this automatically.
-
 ## Usage
 
 ### Encoding
@@ -61,6 +42,11 @@ import pynvjpeg as pynv
 batch_size = 4
 decoded = pynv.decode_frames_jpeg2k(data, len(data), rows, columns, 4)
 ```
+
+## Troubleshooting
+If you have problems building, try the following:
+* Make sure you have `PythonX.YZ-dev` installed
+* Verify that CUDA is installed properly
 
 # TODO 
 * Can we relax the constraint that image dimensions are known ahead of time without much performance hit?
