@@ -1,8 +1,8 @@
 .PHONY: clean clean-env check quality style tag-version test env upload upload-test
 
 PROJECT=pynvjpeg
-QUALITY_DIRS=$(PROJECT) tests build_setuptools.py
-CLEAN_DIRS=$(PROJECT) tests
+QUALITY_DIRS=src tests build_setuptools.py
+CLEAN_DIRS=src tests
 PYTHON=pdm run python
 
 CONFIG_FILE := config.mk
@@ -23,10 +23,11 @@ clean: ## remove cache files
 	find $(CLEAN_DIRS) -name '*.pyc' -type f -delete
 	find $(CLEAN_DIRS) -name '*,cover' -type f -delete
 	find $(CLEAN_DIRS) -name '*.orig' -type f -delete
+	rm -rf dist
 
 clean-env: ## remove the virtual environment directory
-	pdm venv remove $(PROJECT)
-
+	pdm venv remove -y $(PROJECT)
+	rm -rf .pdm-python
 
 deploy: ## installs from lockfile
 	git submodule update --init --recursive
@@ -88,3 +89,13 @@ types: node_modules
 help: ## display this help message
 	@echo "Please use \`make <target>' where <target> is one of"
 	@perl -nle'print $& if m{^[a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m  %-25s\033[0m %s\n", $$1, $$2}'
+
+reset:
+	$(MAKE) clean
+	$(MAKE) clean-env
+	$(MAKE) init
+	$(MAKE) check
+
+pypi:
+	$(PYTHON) -m build
+	$(PYTHON) -m twine upload dist/*
