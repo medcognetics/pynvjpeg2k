@@ -8,7 +8,7 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 # 
 
-cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
 
 project(pynvjpeg LANGUAGES CXX CUDA)
 
@@ -16,8 +16,7 @@ message(STATUS "Python Executable: ${Python_EXECUTABLE}")
 message(STATUS "Python Include Dirs: ${Python_INCLUDE_DIRS}")
 
 # find pybind11
-set(pybind11_DIR extern/pybind11)
-find_package(pybind11 REQUIRED)
+find_package(pybind11 REQUIRED PATHS ${PYBIND_DIR})
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -58,4 +57,10 @@ pybind11_add_module(
   "src/helpers.cpp"
 )
 target_include_directories(${PROJECT_NAME} PRIVATE ${NVJPEG2K_INCLUDE})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${NVJPEG2K_LIB} ${CUDART_LIB})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${NVJPEG2K_LIB} ${CUDART_LIB})
+
+# Add the directory to the rpath
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    BUILD_RPATH ${Python_INCLUDE_DIRS}/nvidia/nvjpeg2k/lib
+    INSTALL_RPATH ${Python_INCLUDE_DIRS}/nvidia/nvjpeg2k/lib
+)

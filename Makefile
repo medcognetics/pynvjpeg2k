@@ -52,12 +52,14 @@ quality:
 	$(MAKE) clean
 	$(PYTHON) -m black --check $(QUALITY_DIRS)
 	$(PYTHON) -m autopep8 -a $(QUALITY_DIRS)
+	find src -name '*.cpp' -o -name '*.h' | xargs pdm run clang-format --dry-run
 
 style:
 	$(PYTHON) -m autoflake -r -i $(QUALITY_DIRS)
 	$(PYTHON) -m isort $(QUALITY_DIRS)
 	$(PYTHON) -m autopep8 -a $(QUALITY_DIRS)
 	$(PYTHON) -m black $(QUALITY_DIRS)
+	find src -name '*.cpp' -o -name '*.h' | xargs pdm run clang-format -i
 
 test: ## run unit tests
 	$(PYTHON) -m pytest \
