@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from sysconfig import get_paths
 
+import pybind11
 from setuptools import Extension
 from setuptools.command.build_ext import build_ext
 
@@ -58,6 +59,7 @@ class CMakeBuild(build_ext):
             f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
             "-DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE",
             "-DCMAKE_INSTALL_RPATH=$ORIGIN",
+            f"-DPYBIND_DIR={pybind11.get_cmake_dir()}",
         ]
         build_args = []
         # Adding CMake arguments set as environment variable

@@ -1,36 +1,33 @@
+#include <cuda_runtime_api.h>
 #include <iostream>
+#include <nvjpeg2k.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/numpy.h>
-#include <cuda_runtime_api.h>
-#include <nvjpeg2k.h>
-
 
 namespace py = pybind11;
 
-namespace dicom {
+namespace dicom
+{
 
+template <typename D> D read(const char *buffer, size_t offset = 0);
+uint16_t readLE(const char *buffer, size_t offset = 0);
+uint32_t readLE32(const char *buffer, size_t offset = 0);
 
-template <typename D>
-D read(const char* buffer, size_t offset = 0);
-uint16_t readLE(const char* buffer, size_t offset = 0);
-uint32_t readLE32(const char* buffer, size_t offset = 0);
-
-bool hasBot(const char* buffer);
+bool hasBot(const char *buffer);
 
 typedef struct
 {
-    size_t offset;
-    size_t length;
+	size_t offset;
+	size_t length;
 } FrameInfo_t;
 
-std::vector<FrameInfo_t> getFrameInfo(const char* buffer, size_t size);
+std::vector<FrameInfo_t> getFrameInfo(const char *buffer, size_t size);
 
-size_t getNumberOfFragments(const char* buffer, size_t size);
+size_t getNumberOfFragments(const char *buffer, size_t size);
 
-py::list getFramePositions(const char* buffer, size_t size);
+py::list getFramePositions(const char *buffer, size_t size);
 
 void pybind_init(py::module &m);
 
-}
+} // namespace dicom
